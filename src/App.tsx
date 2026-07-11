@@ -1,122 +1,60 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import { useMemo, useState } from 'react';
+import { Chart } from './components/Chart';
+import { Controls } from './components/Controls';
+import { Readout } from './components/Readout';
+import { buildCliffAnnotation, buildCurve, toEngineInputs } from './tax/curve';
+import { computeBreakdown, effectiveRate, marginalRate } from './tax/engine';
+import { formatGBP } from './tax/format';
+import { defaultInputs } from './state/defaults';
+import type { TaxInputs } from './tax/types';
+import './App.css';
 
-function App() {
-  const [count, setCount] = useState(0)
+export default function App() {
+  const [inputs, setInputs] = useState<TaxInputs>(defaultInputs);
+
+  // Everything derived recomputes on every input change — no "Calculate" button.
+  const { curve, cliff, breakdown, marginal, effective } = useMemo(() => {
+    const engineInputs = toEngineInputs(inputs);
+    const b = computeBreakdown(inputs.grossSalary, engineInputs);
+    return {
+      curve: buildCurve(inputs),
+      cliff: buildCliffAnnotation(inputs),
+      breakdown: b,
+      marginal: marginalRate(inputs.grossSalary, engineInputs),
+      effective: effectiveRate(b),
+    };
+  }, [inputs]);
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+    <div className="app">
+      <header className="app-header">
+        <h1>UK Marginal Tax Explorer</h1>
+        <p>
+          How much of your next £1 actually reaches your pocket. England, Wales &amp; Northern
+          Ireland · illustrative 2026/27 figures.
+        </p>
+      </header>
 
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
+      <main className="layout">
+        <div className="chart-panel">
+          <Chart curve={curve} cliff={cliff} positionGross={inputs.grossSalary} />
+          {cliff && (
+            <p className="cliff-note">
+              ⚠️ Childcare cliff at {formatGBP(cliff.at ?? 0)} gross: {cliff.detail}
+            </p>
+          )}
         </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+        <aside className="side-panel">
+          <Readout breakdown={breakdown} marginalRate={marginal} effectiveRate={effective} />
+          <Controls inputs={inputs} setInputs={setInputs} />
+        </aside>
+      </main>
+
+      <footer className="app-footer">
+        Estimates only, not tax advice. Assumes standard tax code, no Scottish rates, no student
+        loan. Verify figures against GOV.UK.
+      </footer>
+    </div>
+  );
 }
-
-export default App

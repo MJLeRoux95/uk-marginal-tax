@@ -4,7 +4,11 @@ import { formatGBP } from '../tax/format';
 
 export const pensionMethods: { value: PensionMethod; label: string; hint: string }[] = [
   { value: 'salary_sacrifice', label: 'Salary sacrifice', hint: 'Cuts Income Tax and NI' },
-  { value: 'relief_at_source', label: 'Relief at source', hint: 'Tax relief only, no NI saving' },
+  {
+    value: 'relief_at_source',
+    label: 'Relief at source',
+    hint: "Tax relief only, no NI saving. NEST, the UK's largest pension scheme, is relief at source",
+  },
   { value: 'net_pay', label: 'Net pay', hint: 'Cuts tax before NI, no NI saving' },
 ];
 

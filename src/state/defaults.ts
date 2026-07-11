@@ -6,9 +6,9 @@ export const defaultInputs: TaxInputs = {
   grossSalary: 65_000,
   otherIncome: 0,
   pension: {
-    method: 'salary_sacrifice',
+    method: 'relief_at_source',
     inputType: 'percent',
-    value: 0,
+    value: 5,
   },
   children: 0,
   childcare: {

@@ -37,7 +37,7 @@ export default function App() {
   return (
     <div className="app">
       <header className="app-header">
-        <h1>UK Marginal Tax Explorer</h1>
+        <h1>Marginal Tax Visualiser</h1>
         <p>
           How much of your next £1 actually reaches your pocket. England, Wales &amp; Northern
           Ireland · illustrative 2026/27 figures.

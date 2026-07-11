@@ -1,4 +1,4 @@
-# UK Marginal Tax Explorer
+# Marginal Tax Visualiser
 
 A live, interactive visualiser of the UK marginal tax rate — how much of your
 **next £1** actually reaches your pocket — for England, Wales & Northern Ireland.

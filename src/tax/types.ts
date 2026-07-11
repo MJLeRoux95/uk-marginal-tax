@@ -64,13 +64,24 @@ export interface DeductionBreakdown {
   takeHome: number; // cash in pocket (excludes pension, which is saved not spent)
 }
 
-/** How a one-off bonus is taxed, stacked on top of base salary. */
-export interface BonusResult {
+/** How a one-off bonus is taxed, stacked on top of base salary (tax/NI/loan only). */
+export interface BonusCore {
   bonus: number;
   kept: number; // extra cash actually reaching your pocket
   deducted: number; // tax + NI + student loan on the bonus
   keepRate: number; // kept / bonus
   marginalDeductionRate: number; // deducted / bonus
+}
+
+/** Bonus result enriched with the £100k childcare-cliff interaction. */
+export interface BonusResult extends BonusCore {
+  /** Childcare benefit forfeited because the bonus tips ANI over £100k (0 if not). */
+  childcareLost: number;
+  /** True money kept once any childcare loss is netted off — can be negative. */
+  netKept: number;
+  netKeepRate: number;
+  /** True: the bonus is what pushes adjusted net income over the £100k cliff. */
+  crossesCliff: boolean;
 }
 
 /** A point on the marginal-rate curve. */

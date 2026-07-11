@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildCliffAnnotation, toEngineInputs } from './curve';
+import { buildBonus, buildCliffAnnotation, toEngineInputs } from './curve';
 import { computeBreakdown } from './engine';
 import type { TaxInputs } from './types';
 
@@ -42,5 +42,31 @@ describe('childcare cliff zone', () => {
       childcare: { ...inputs.childcare, usesTaxFreeChildcare: false, usesFundedHours: false },
     };
     expect(buildCliffAnnotation(none)).toBeNull();
+  });
+});
+
+describe('bonus vs the childcare cliff', () => {
+  it('a bonus that tips you over £100k forfeits childcare and can leave you worse off', () => {
+    // £95k + £10k bonus → ANI 95k (has childcare) to 105k (lost). 2 kids = £12k lost.
+    const b = buildBonus({ ...inputs, grossSalary: 95_000, bonus: 10_000 });
+    expect(b.crossesCliff).toBe(true);
+    expect(b.childcareLost).toBe(12_000);
+    // Tax-only take-home gain: £5k @ 58% keep + £5k @ 38% keep = £4,800.
+    expect(Math.abs(b.kept - 4_800)).toBeLessThan(1);
+    // Netting off £12k childcare → £7,200 worse off.
+    expect(Math.abs(b.netKept - -7_200)).toBeLessThan(1);
+  });
+
+  it('a bonus fully below the cliff has no childcare impact', () => {
+    const b = buildBonus({ ...inputs, grossSalary: 60_000, bonus: 5_000 });
+    expect(b.crossesCliff).toBe(false);
+    expect(b.childcareLost).toBe(0);
+    expect(b.netKept).toBeCloseTo(b.kept, 5);
+  });
+
+  it('no extra loss when you were already over the cliff', () => {
+    const b = buildBonus({ ...inputs, grossSalary: 110_000, bonus: 5_000 });
+    expect(b.crossesCliff).toBe(false); // childcare already gone before the bonus
+    expect(b.childcareLost).toBe(0);
   });
 });

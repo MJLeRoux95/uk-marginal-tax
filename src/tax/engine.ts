@@ -9,7 +9,7 @@
 // much do you lose" — the intuitive reading of marginal tax. See resolvePensionAmount.
 
 import { annualChildBenefit, config2026, type TaxConfig } from './config2026';
-import type { BonusResult, DeductionBreakdown, PensionMethod, StudentLoanInput } from './types';
+import type { BonusCore, DeductionBreakdown, PensionMethod, StudentLoanInput } from './types';
 
 /** Income Tax on total taxable income, given a (possibly tapered) personal allowance. */
 function incomeTaxOnTaxable(
@@ -178,7 +178,7 @@ export function bonusResult(
   bonus: number,
   inputs: EngineInputs,
   cfg: TaxConfig = config2026,
-): BonusResult {
+): BonusCore {
   const safeBonus = Math.max(0, bonus);
   const before = computeBreakdown(grossSalary, inputs, cfg).takeHome;
   const after = computeBreakdown(grossSalary + safeBonus, inputs, cfg).takeHome;

@@ -3,9 +3,15 @@
 // on the engine.
 
 import { config2026, type TaxConfig } from './config2026';
-import { computeBreakdown, marginalRate, type EngineInputs } from './engine';
+import { bonusResult, computeBreakdown, marginalRate, type EngineInputs } from './engine';
 import { formatGBP } from './format';
-import { resolvePensionAmount, type Annotation, type CurvePoint, type TaxInputs } from './types';
+import {
+  resolvePensionAmount,
+  type Annotation,
+  type BonusResult,
+  type CurvePoint,
+  type TaxInputs,
+} from './types';
 
 export const SWEEP_MIN = 0;
 export const SWEEP_MAX = 200_000;
@@ -120,6 +126,38 @@ function grossToRecover(
     else hi = mid;
   }
   return { gross: hi, recovered: true };
+}
+
+/**
+ * How much of a one-off bonus you truly keep, including the £100k childcare cliff.
+ * If the bonus is what tips adjusted net income over £100k, the whole childcare
+ * benefit is forfeited — which can make the bonus worth less than nothing.
+ */
+export function buildBonus(inputs: TaxInputs, cfg: TaxConfig = config2026): BonusResult {
+  const engineInputs = toEngineInputs(inputs);
+  const core = bonusResult(inputs.grossSalary, inputs.bonus, engineInputs, cfg);
+
+  const valueLost = childcareValueLost(inputs);
+  const aniBefore = computeBreakdown(inputs.grossSalary, engineInputs, cfg).adjustedNetIncome;
+  const aniAfter = computeBreakdown(
+    inputs.grossSalary + inputs.bonus,
+    engineInputs,
+    cfg,
+  ).adjustedNetIncome;
+  const crossesCliff =
+    valueLost > 0 &&
+    aniBefore <= cfg.childcareCliffThreshold &&
+    aniAfter > cfg.childcareCliffThreshold;
+
+  const childcareLost = crossesCliff ? valueLost : 0;
+  const netKept = core.kept - childcareLost;
+  return {
+    ...core,
+    childcareLost,
+    netKept,
+    netKeepRate: core.bonus > 0 ? netKept / core.bonus : 0,
+    crossesCliff,
+  };
 }
 
 /** The user's current position marker. */

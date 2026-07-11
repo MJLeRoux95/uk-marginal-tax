@@ -274,6 +274,27 @@ body {
   color: var(--bonus);
   letter-spacing: -0.01em;
 }
+.bonus-amount.negative {
+  color: var(--cliff);
+}
+.bonus-card.bonus-cliff {
+  border-color: var(--cliff);
+}
+.bonus-warning {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: var(--ink-soft);
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--cliff) 12%, transparent);
+}
+.bonus-bar-childcare {
+  background: var(--cliff);
+}
+.dot-childcare {
+  background: var(--cliff);
+}
 .bonus-sub {
   font-size: 0.82rem;
   color: var(--ink-soft);

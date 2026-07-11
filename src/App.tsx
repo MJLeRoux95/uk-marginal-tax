@@ -3,8 +3,8 @@ import { Chart } from './components/Chart';
 import { Controls } from './components/Controls';
 import { Readout } from './components/Readout';
 import { BonusCard } from './components/BonusCard';
-import { buildCliffAnnotation, buildCurve, toEngineInputs } from './tax/curve';
-import { bonusResult, computeBreakdown, effectiveRate, marginalRate } from './tax/engine';
+import { buildBonus, buildCliffAnnotation, buildCurve, toEngineInputs } from './tax/curve';
+import { computeBreakdown, effectiveRate, marginalRate } from './tax/engine';
 import { formatGBP } from './tax/format';
 import { defaultInputs } from './state/defaults';
 import type { TaxInputs } from './tax/types';
@@ -23,7 +23,7 @@ export default function App() {
       breakdown: b,
       marginal: marginalRate(inputs.grossSalary, engineInputs),
       effective: effectiveRate(b),
-      bonus: bonusResult(inputs.grossSalary, inputs.bonus, engineInputs),
+      bonus: buildBonus(inputs),
     };
   }, [inputs]);
 

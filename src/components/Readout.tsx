@@ -13,12 +13,12 @@ export function Readout({ breakdown, marginalRate, effectiveRate }: ReadoutProps
     <div className="readout">
       <div className="stat-top">
         <div className="stat">
-          <span className="stat-value big neg">{formatPercent(marginalRate)}</span>
-          <span className="stat-label">Marginal rate on your next £1</span>
-        </div>
-        <div className="stat">
           <span className="stat-value big neg">{formatPercent(effectiveRate, 1)}</span>
           <span className="stat-label">Effective (average) rate</span>
+        </div>
+        <div className="stat">
+          <span className="stat-value big neg">{formatPercent(marginalRate)}</span>
+          <span className="stat-label">Marginal rate on your next £1</span>
         </div>
       </div>
 

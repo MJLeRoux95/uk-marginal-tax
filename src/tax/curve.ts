@@ -84,11 +84,13 @@ export function buildCliffAnnotation(
 
   const detail = recovery.recovered
     ? `Cross this point and you lose ~${formatGBP(valueLost)} of childcare support in one go. ` +
-      `Everything from ${formatGBP(cliffGross)} up to ${formatGBP(recovery.gross)} gross (the shaded ` +
-      `zone) leaves you financially no better off than at ${formatGBP(cliffGross)} — you only truly ` +
-      `get ahead once you earn about ${formatGBP(recovery.gross)} (${formatGBP(payRiseToRecover)} more).`
+      `Earning anywhere from ${formatGBP(cliffGross)} to ${formatGBP(recovery.gross)} gross (the shaded ` +
+      `zone) leaves you worse off than at ${formatGBP(cliffGross)} — the lost childcare outweighs the ` +
+      `extra pay. You don't claw it back until about ${formatGBP(recovery.gross)} ` +
+      `(${formatGBP(payRiseToRecover)} more).`
     : `Cross this point and you lose ~${formatGBP(valueLost)} of childcare support in one go. ` +
-      `You wouldn't earn that back even by ${formatGBP(SWEEP_MAX)} gross — the shaded zone runs off the chart.`;
+      `It leaves you worse off, and you wouldn't claw it back even by ${formatGBP(SWEEP_MAX)} gross — ` +
+      `the shaded zone runs off the chart.`;
 
   return {
     kind: 'cliff',

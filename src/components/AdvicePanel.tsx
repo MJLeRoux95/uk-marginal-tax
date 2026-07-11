@@ -1,4 +1,4 @@
-import type { Dispatch, SetStateAction } from 'react';
+import { useRef, type Dispatch, type SetStateAction } from 'react';
 import type { TaxInputs } from '../tax/types';
 import { cycleToWorkSaving, salarySacrificeSwitchSaving } from '../tax/curve';
 import { formatGBP } from '../tax/format';
@@ -18,6 +18,12 @@ export function AdvicePanel({ inputs, setInputs, onBack }: Props) {
   const switchSaving = salarySacrificeSwitchSaving(inputs);
   const bikeSaving = cycleToWorkSaving(inputs);
 
+  // Once the salary-sacrifice section has appeared, keep it: switching pension method
+  // in the section below shouldn't make it flicker in and out. It becomes a
+  // confirmation once you're on salary sacrifice.
+  const showSacrificeSection = useRef(!onSalarySacrifice);
+  if (!onSalarySacrifice) showSacrificeSection.current = true;
+
   let n = 0;
 
   return (
@@ -32,34 +38,50 @@ export function AdvicePanel({ inputs, setInputs, onBack }: Props) {
         </p>
       </div>
 
-      {!onSalarySacrifice && (
+      {showSacrificeSection.current && (
         <section className="advice-item">
           <span className="advice-num">{++n}</span>
           <div className="advice-body">
-            <h3>Switch your pension to salary sacrifice</h3>
-            <p>
-              You're on <strong>{currentMethodLabel}</strong>. Salary sacrifice gives the same tax
-              relief but also avoids National Insurance on your contributions — for the same money
-              in your pension, more stays out of the taxman's hands.
-            </p>
-            <div className="advice-saving">
-              {switchSaving > 0 ? (
-                <>
-                  <strong>{formatGBP(switchSaving)}/yr</strong> saved at your current contribution
-                </>
-              ) : (
-                <>Add a contribution below to see the saving</>
-              )}
-            </div>
-            <button
-              type="button"
-              className="advice-action"
-              onClick={() =>
-                setInputs((s) => ({ ...s, pension: { ...s.pension, method: 'salary_sacrifice' } }))
-              }
-            >
-              Switch to salary sacrifice
-            </button>
+            <h3>Use salary sacrifice for your pension</h3>
+            {onSalarySacrifice ? (
+              <>
+                <p>
+                  Salary sacrifice is the most tax-efficient way to contribute: every pound avoids
+                  both Income Tax and National Insurance.
+                </p>
+                <div className="advice-saving advice-done">✓ You're on salary sacrifice</div>
+              </>
+            ) : (
+              <>
+                <p>
+                  You're on <strong>{currentMethodLabel}</strong>. Salary sacrifice gives the same
+                  tax relief but also avoids National Insurance on your contributions — for the same
+                  money in your pension, more stays out of the taxman's hands.
+                </p>
+                <div className="advice-saving">
+                  {switchSaving > 0 ? (
+                    <>
+                      <strong>{formatGBP(switchSaving)}/yr</strong> saved at your current
+                      contribution
+                    </>
+                  ) : (
+                    <>Add a contribution below to see the saving</>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  className="advice-action"
+                  onClick={() =>
+                    setInputs((s) => ({
+                      ...s,
+                      pension: { ...s.pension, method: 'salary_sacrifice' },
+                    }))
+                  }
+                >
+                  Switch to salary sacrifice
+                </button>
+              </>
+            )}
           </div>
         </section>
       )}

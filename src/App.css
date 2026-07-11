@@ -518,6 +518,10 @@ body {
   color: var(--accent);
   font-variant-numeric: tabular-nums;
 }
+.advice-saving.advice-done {
+  color: var(--accent);
+  font-weight: 600;
+}
 .advice-action {
   align-self: flex-start;
   border: none;

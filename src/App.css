@@ -8,6 +8,8 @@
   --accent: #2f6fed;
   --accent-soft: rgba(47, 111, 237, 0.14);
   --cliff: #e0483d;
+  --bonus: #1f9d6b;
+  --bonus-lost: #d38b2f;
   --shadow: 0 1px 3px rgba(20, 30, 50, 0.08), 0 6px 20px rgba(20, 30, 50, 0.06);
   --radius: 12px;
 }
@@ -23,6 +25,8 @@
     --accent: #5b8dff;
     --accent-soft: rgba(91, 141, 255, 0.16);
     --cliff: #ff6f63;
+    --bonus: #2fd08f;
+    --bonus-lost: #e6a94b;
     --shadow: 0 1px 3px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.3);
   }
 }
@@ -161,6 +165,10 @@ body {
   font-size: 10px;
   font-weight: 700;
 }
+.bonus-span {
+  fill: var(--bonus);
+  opacity: 0.16;
+}
 .hover-line {
   stroke: var(--ink-soft);
   stroke-width: 1;
@@ -226,6 +234,65 @@ body {
 }
 .breakdown .total td {
   font-weight: 700;
+}
+
+/* ---- bonus card ---- */
+.bonus-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--bg);
+}
+.bonus-headline {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.bonus-amount {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--bonus);
+  letter-spacing: -0.01em;
+}
+.bonus-sub {
+  font-size: 0.82rem;
+  color: var(--ink-soft);
+}
+.bonus-bar {
+  display: flex;
+  height: 12px;
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--line);
+}
+.bonus-bar-kept {
+  background: var(--bonus);
+}
+.bonus-bar-lost {
+  background: var(--bonus-lost);
+}
+.bonus-legend {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.76rem;
+  color: var(--ink-soft);
+  gap: 8px;
+}
+.bonus-legend .dot {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  margin-right: 5px;
+}
+.dot-kept {
+  background: var(--bonus);
+}
+.dot-lost {
+  background: var(--bonus-lost);
 }
 
 /* ---- controls ---- */

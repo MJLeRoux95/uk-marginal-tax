@@ -40,6 +40,12 @@ export function Readout({ breakdown, marginalRate, effectiveRate }: ReadoutProps
               <td>{formatGBP(b.hicbc)}</td>
             </tr>
           )}
+          {b.studentLoan > 0 && (
+            <tr>
+              <td>Student loan</td>
+              <td>{formatGBP(b.studentLoan)}</td>
+            </tr>
+          )}
           {b.pensionContribution > 0 && (
             <tr className="muted">
               <td>Pension (saved, not taxed as income)</td>
@@ -47,7 +53,7 @@ export function Readout({ breakdown, marginalRate, effectiveRate }: ReadoutProps
             </tr>
           )}
           <tr className="total">
-            <td>Total tax &amp; NI</td>
+            <td>Total deductions</td>
             <td>{formatGBP(b.totalDeductions)}</td>
           </tr>
           <tr className="muted">

@@ -17,6 +17,7 @@ export function toEngineInputs(inputs: TaxInputs): EngineInputs {
     pensionAmount: resolvePensionAmount(inputs.pension, inputs.grossSalary),
     pensionMethod: inputs.pension.method,
     children: inputs.children,
+    studentLoan: inputs.studentLoan,
   };
 }
 

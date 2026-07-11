@@ -15,6 +15,7 @@ interface ChartProps {
   curve: CurvePoint[];
   cliff: Annotation | null;
   positionGross: number;
+  bonus: number;
 }
 
 /** Nearest marginal rate on the curve for a given gross (curve is finely sampled). */
@@ -25,7 +26,7 @@ function rateAt(curve: CurvePoint[], gross: number): number {
   return curve[i].marginalRate;
 }
 
-export function Chart({ curve, cliff, positionGross }: ChartProps) {
+export function Chart({ curve, cliff, positionGross, bonus }: ChartProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const [hoverGross, setHoverGross] = useState<number | null>(null);
 
@@ -114,6 +115,17 @@ export function Chart({ curve, cliff, positionGross }: ChartProps) {
       {/* the curve */}
       <path d={areaPath} className="curve-area" />
       <path d={linePath} className="curve-line" />
+
+      {/* bonus span: from your salary to salary + bonus */}
+      {bonus > 0 && (
+        <rect
+          x={x(positionGross)}
+          y={M.top}
+          width={Math.max(0, x(Math.min(positionGross + bonus, X_MAX)) - x(positionGross))}
+          height={VB_H - M.bottom - M.top}
+          className="bonus-span"
+        />
+      )}
 
       {/* £100k childcare cliff */}
       {cliff?.at != null && (

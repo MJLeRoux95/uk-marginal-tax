@@ -2,8 +2,9 @@ import { useMemo, useState } from 'react';
 import { Chart } from './components/Chart';
 import { Controls } from './components/Controls';
 import { Readout } from './components/Readout';
+import { BonusCard } from './components/BonusCard';
 import { buildCliffAnnotation, buildCurve, toEngineInputs } from './tax/curve';
-import { computeBreakdown, effectiveRate, marginalRate } from './tax/engine';
+import { bonusResult, computeBreakdown, effectiveRate, marginalRate } from './tax/engine';
 import { formatGBP } from './tax/format';
 import { defaultInputs } from './state/defaults';
 import type { TaxInputs } from './tax/types';
@@ -13,7 +14,7 @@ export default function App() {
   const [inputs, setInputs] = useState<TaxInputs>(defaultInputs);
 
   // Everything derived recomputes on every input change — no "Calculate" button.
-  const { curve, cliff, breakdown, marginal, effective } = useMemo(() => {
+  const { curve, cliff, breakdown, marginal, effective, bonus } = useMemo(() => {
     const engineInputs = toEngineInputs(inputs);
     const b = computeBreakdown(inputs.grossSalary, engineInputs);
     return {
@@ -22,6 +23,7 @@ export default function App() {
       breakdown: b,
       marginal: marginalRate(inputs.grossSalary, engineInputs),
       effective: effectiveRate(b),
+      bonus: bonusResult(inputs.grossSalary, inputs.bonus, engineInputs),
     };
   }, [inputs]);
 
@@ -37,7 +39,12 @@ export default function App() {
 
       <main className="layout">
         <div className="chart-panel">
-          <Chart curve={curve} cliff={cliff} positionGross={inputs.grossSalary} />
+          <Chart
+            curve={curve}
+            cliff={cliff}
+            positionGross={inputs.grossSalary}
+            bonus={inputs.bonus}
+          />
           {cliff && (
             <p className="cliff-note">
               ⚠️ Childcare cliff at {formatGBP(cliff.at ?? 0)} gross: {cliff.detail}
@@ -47,13 +54,14 @@ export default function App() {
 
         <aside className="side-panel">
           <Readout breakdown={breakdown} marginalRate={marginal} effectiveRate={effective} />
+          {inputs.bonus > 0 && <BonusCard result={bonus} />}
           <Controls inputs={inputs} setInputs={setInputs} />
         </aside>
       </main>
 
       <footer className="app-footer">
-        Estimates only, not tax advice. Assumes standard tax code, no Scottish rates, no student
-        loan. Verify figures against GOV.UK.
+        Estimates only, not tax advice. Assumes standard tax code and English/Welsh/NI rates (not
+        Scottish Income Tax). Verify figures against GOV.UK.
       </footer>
     </div>
   );

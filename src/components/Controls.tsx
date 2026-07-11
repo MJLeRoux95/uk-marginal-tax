@@ -1,6 +1,12 @@
 import type { Dispatch, SetStateAction } from 'react';
+import { config2026, type StudentLoanPlan } from '../tax/config2026';
 import type { PensionMethod, TaxInputs } from '../tax/types';
 import { formatGBP } from '../tax/format';
+
+const studentLoanPlans = Object.entries(config2026.studentLoanPlans) as [
+  StudentLoanPlan,
+  { label: string },
+][];
 
 interface ControlsProps {
   inputs: TaxInputs;
@@ -19,6 +25,8 @@ export function Controls({ inputs, setInputs }: ControlsProps) {
     setInputs((s) => ({ ...s, pension: { ...s.pension, ...p } }));
   const patchChildcare = (p: Partial<TaxInputs['childcare']>) =>
     setInputs((s) => ({ ...s, childcare: { ...s.childcare, ...p } }));
+  const patchStudentLoan = (p: Partial<TaxInputs['studentLoan']>) =>
+    setInputs((s) => ({ ...s, studentLoan: { ...s.studentLoan, ...p } }));
 
   return (
     <div className="controls">
@@ -149,6 +157,60 @@ export function Controls({ inputs, setInputs }: ControlsProps) {
             </label>
           </div>
         )}
+      </section>
+
+      <section className="control-group">
+        <h3>Student loan</h3>
+        <label className="field">
+          <span className="field-label">Repayment plan</span>
+          <select
+            className="num-input"
+            value={inputs.studentLoan.plan}
+            onChange={(e) =>
+              patchStudentLoan({ plan: e.target.value as TaxInputs['studentLoan']['plan'] })
+            }
+          >
+            <option value="none">None</option>
+            {studentLoanPlans.map(([value, plan]) => (
+              <option key={value} value={value}>
+                {plan.label}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="check">
+          <input
+            type="checkbox"
+            checked={inputs.studentLoan.postgraduate}
+            onChange={(e) => patchStudentLoan({ postgraduate: e.target.checked })}
+          />
+          Also repaying a Postgraduate Loan
+        </label>
+      </section>
+
+      <section className="control-group">
+        <h3>Bonus</h3>
+        <label className="field">
+          <span className="field-label">
+            One-off bonus <strong>{formatGBP(inputs.bonus)}</strong>
+          </span>
+          <input
+            type="range"
+            min={0}
+            max={50_000}
+            step={500}
+            value={inputs.bonus}
+            onChange={(e) => patch({ bonus: Number(e.target.value) })}
+          />
+          <input
+            type="number"
+            min={0}
+            step={500}
+            value={inputs.bonus}
+            onChange={(e) => patch({ bonus: Number(e.target.value) })}
+            className="num-input"
+          />
+        </label>
       </section>
     </div>
   );

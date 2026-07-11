@@ -1,7 +1,16 @@
 // Core types for the tax engine. The engine is pure (no React) so it can be
 // unit-tested and reused by the chart's curve sweep.
 
+import type { StudentLoanPlan } from './config2026';
+
 export type PensionMethod = 'salary_sacrifice' | 'relief_at_source' | 'net_pay';
+
+export interface StudentLoanInput {
+  /** Undergraduate plan, or 'none'. */
+  plan: StudentLoanPlan | 'none';
+  /** Postgraduate loan repaid on top of any undergraduate plan. */
+  postgraduate: boolean;
+}
 
 export interface PensionInput {
   method: PensionMethod;
@@ -29,6 +38,9 @@ export interface TaxInputs {
   pension: PensionInput;
   children: number;
   childcare: ChildcareInput;
+  studentLoan: StudentLoanInput;
+  /** One-off bonus, analysed as income stacked on top of base salary. */
+  bonus: number;
 }
 
 /** Pension resolved to a fixed £/year amount for a given salary. */
@@ -47,8 +59,18 @@ export interface DeductionBreakdown {
   incomeTax: number;
   employeeNI: number;
   hicbc: number;
-  totalDeductions: number; // incomeTax + NI + hicbc
+  studentLoan: number;
+  totalDeductions: number; // incomeTax + NI + hicbc + studentLoan
   takeHome: number; // cash in pocket (excludes pension, which is saved not spent)
+}
+
+/** How a one-off bonus is taxed, stacked on top of base salary. */
+export interface BonusResult {
+  bonus: number;
+  kept: number; // extra cash actually reaching your pocket
+  deducted: number; // tax + NI + student loan on the bonus
+  keepRate: number; // kept / bonus
+  marginalDeductionRate: number; // deducted / bonus
 }
 
 /** A point on the marginal-rate curve. */

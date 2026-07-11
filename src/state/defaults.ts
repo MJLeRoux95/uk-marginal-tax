@@ -17,4 +17,9 @@ export const defaultInputs: TaxInputs = {
     taxFreeChildcarePerChild: config2026.taxFreeChildcareMaxPerChild,
     fundedHoursPerChild: config2026.fundedHoursDefaultAnnualPerChild,
   },
+  studentLoan: {
+    plan: 'none',
+    postgraduate: false,
+  },
+  bonus: 0,
 };

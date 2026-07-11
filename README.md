@@ -13,8 +13,12 @@ The chart plots **marginal tax rate (y)** against **gross income (x)** and shows
   of children;
 - the **£100k childcare cliff** (Tax-Free Childcare + funded hours), drawn as an
   annotated marker with the pay rise needed to recover it;
+- **student loan repayments** (Plan 1/2/4/5 + Postgraduate), which add 9%/6% above
+  their thresholds;
 - how **salary sacrifice / relief at source / net pay** pensions shift the whole
-  curve by changing your adjusted net income.
+  curve by changing your adjusted net income;
+- a **bonus** calculator showing how much of a one-off bonus you actually keep once
+  it stacks on top of your salary.
 
 ## Run locally
 
@@ -39,6 +43,7 @@ All rates and thresholds live in a single file,
 
 ## Caveats
 
-Estimates only, **not tax advice**. Assumes a standard tax code, no Scottish
-rates, and no student loan. Some 2026/27 figures are seeded from 2025/26 and are
-flagged in the config — verify against GOV.UK before relying on them.
+Estimates only, **not tax advice**. Assumes a standard tax code and English/Welsh/NI
+Income Tax rates (not Scottish Income Tax). Some 2026/27 figures — including student
+loan thresholds — are seeded from 2025/26 and flagged in the config; verify against
+GOV.UK before relying on them.

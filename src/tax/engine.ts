@@ -9,7 +9,7 @@
 // much do you lose" — the intuitive reading of marginal tax. See resolvePensionAmount.
 
 import { annualChildBenefit, config2026, type TaxConfig } from './config2026';
-import type { DeductionBreakdown, PensionMethod } from './types';
+import type { BonusResult, DeductionBreakdown, PensionMethod, StudentLoanInput } from './types';
 
 /** Income Tax on total taxable income, given a (possibly tapered) personal allowance. */
 function incomeTaxOnTaxable(
@@ -67,11 +67,35 @@ export function hicbc(adjustedNetIncome: number, children: number, cfg: TaxConfi
   return cb * pct;
 }
 
+/**
+ * Student loan repayment: `rate` of assessable income above each plan's threshold.
+ * A borrower can repay an undergraduate plan and a postgraduate loan simultaneously.
+ * Assessable income mirrors NIable pay (salary sacrifice reduces it; relief-at-source
+ * and net-pay pensions do not) — a reasonable simplification of PAYE behaviour.
+ */
+export function studentLoanRepayment(
+  assessableIncome: number,
+  sl: StudentLoanInput,
+  cfg: TaxConfig = config2026,
+): number {
+  let total = 0;
+  if (sl.plan !== 'none') {
+    const p = cfg.studentLoanPlans[sl.plan];
+    total += Math.max(0, assessableIncome - p.threshold) * p.rate;
+  }
+  if (sl.postgraduate) {
+    const pg = cfg.postgraduateLoan;
+    total += Math.max(0, assessableIncome - pg.threshold) * pg.rate;
+  }
+  return total;
+}
+
 export interface EngineInputs {
   otherIncome: number;
   pensionAmount: number; // resolved £/year (fixed across a sweep)
   pensionMethod: PensionMethod;
   children: number;
+  studentLoan: StudentLoanInput;
 }
 
 /** Compute the full deduction breakdown at a given gross salary. */
@@ -102,8 +126,9 @@ export function computeBreakdown(
   const incomeTax = incomeTaxOnTaxable(taxableIncome, personalAllowance, cfg, rasExtension);
   const ni = employeeNI(niableEmployment, cfg);
   const charge = hicbc(adjustedNetIncome, children, cfg);
+  const studentLoan = studentLoanRepayment(niableEmployment + otherIncome, inputs.studentLoan, cfg);
 
-  const totalDeductions = incomeTax + ni + charge;
+  const totalDeductions = incomeTax + ni + charge + studentLoan;
   const takeHome = grossSalary + otherIncome - pension - totalDeductions;
 
   return {
@@ -115,6 +140,7 @@ export function computeBreakdown(
     incomeTax,
     employeeNI: ni,
     hicbc: charge,
+    studentLoan,
     totalDeductions,
     takeHome,
   };
@@ -140,4 +166,29 @@ export function marginalRate(
 export function effectiveRate(breakdown: DeductionBreakdown): number {
   const totalGross = breakdown.grossSalary + breakdown.otherIncome;
   return totalGross > 0 ? breakdown.totalDeductions / totalGross : 0;
+}
+
+/**
+ * How much of a one-off bonus you actually keep. The bonus stacks on top of base
+ * salary, so it's taxed at the rates spanning `grossSalary` → `grossSalary + bonus`
+ * (which may cross into higher bands, the taper, HICBC or a student-loan threshold).
+ */
+export function bonusResult(
+  grossSalary: number,
+  bonus: number,
+  inputs: EngineInputs,
+  cfg: TaxConfig = config2026,
+): BonusResult {
+  const safeBonus = Math.max(0, bonus);
+  const before = computeBreakdown(grossSalary, inputs, cfg).takeHome;
+  const after = computeBreakdown(grossSalary + safeBonus, inputs, cfg).takeHome;
+  const kept = after - before;
+  const deducted = safeBonus - kept;
+  return {
+    bonus: safeBonus,
+    kept,
+    deducted,
+    keepRate: safeBonus > 0 ? kept / safeBonus : 0,
+    marginalDeductionRate: safeBonus > 0 ? deducted / safeBonus : 0,
+  };
 }

@@ -1,13 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { computeBreakdown, marginalRate, type EngineInputs } from './engine';
+import { bonusResult, computeBreakdown, marginalRate, type EngineInputs } from './engine';
 import type { PensionMethod } from './types';
 
-// Baseline: no pension, no other income, no children.
+// Baseline: no pension, no other income, no children, no student loan.
 const base: EngineInputs = {
   otherIncome: 0,
   pensionAmount: 0,
   pensionMethod: 'salary_sacrifice',
   children: 0,
+  studentLoan: { plan: 'none', postgraduate: false },
 };
 
 const withPension = (amount: number, method: PensionMethod): EngineInputs => ({
@@ -79,6 +80,43 @@ describe('HICBC', () => {
   it('fully clawed back at £80k+', () => {
     const b = computeBreakdown(85_000, { ...base, children: 1 });
     expect(near(b.hicbc, 1_354.6)).toBe(true);
+  });
+});
+
+describe('student loans', () => {
+  it('Plan 2 at £40k repays 9% above £28,470', () => {
+    const sl: EngineInputs = { ...base, studentLoan: { plan: 'plan2', postgraduate: false } };
+    const b = computeBreakdown(40_000, sl);
+    expect(near(b.studentLoan, (40_000 - 28_470) * 0.09)).toBe(true); // £1,037.70
+    expect(near(marginalRate(40_000, sl), 0.28 + 0.09, 0.001)).toBe(true); // 37%
+  });
+
+  it('Postgraduate loan adds 6% above £21k, stacking with an undergrad plan', () => {
+    const sl: EngineInputs = { ...base, studentLoan: { plan: 'plan2', postgraduate: true } };
+    const b = computeBreakdown(40_000, sl);
+    const expected = (40_000 - 28_470) * 0.09 + (40_000 - 21_000) * 0.06;
+    expect(near(b.studentLoan, expected)).toBe(true);
+    expect(near(marginalRate(40_000, sl), 0.28 + 0.09 + 0.06, 0.001)).toBe(true); // 43%
+  });
+
+  it('no repayment below the plan threshold', () => {
+    const sl: EngineInputs = { ...base, studentLoan: { plan: 'plan2', postgraduate: false } };
+    expect(computeBreakdown(25_000, sl).studentLoan).toBe(0);
+  });
+});
+
+describe('bonus', () => {
+  it('a £2k bonus wholly within the basic-rate band keeps 72%', () => {
+    const r = bonusResult(30_000, 2_000, base);
+    expect(near(r.kept, 1_440)).toBe(true); // 2,000 × (1 − 0.28)
+    expect(near(r.keepRate, 0.72, 0.001)).toBe(true);
+  });
+
+  it('a bonus straddling the £50,270 higher-rate edge is taxed piecewise', () => {
+    const r = bonusResult(48_000, 5_000, base);
+    // 2,270 @ 28% deduction + 2,730 @ 42% deduction → keep £3,217.80
+    expect(near(r.kept, 3_217.8)).toBe(true);
+    expect(near(r.deducted, 1_782.2)).toBe(true);
   });
 });
 

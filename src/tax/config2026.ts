@@ -38,6 +38,18 @@ export interface TaxConfig {
   // Rough default annual value of funded hours per eligible child (term-time).
   // User-adjustable; documented estimate, not a legal figure.
   fundedHoursDefaultAnnualPerChild: number;
+
+  // Student loan repayments (annual thresholds, (2025/26) — verify for 2026/27)
+  studentLoanPlans: Record<StudentLoanPlan, StudentLoanPlanConfig>;
+  postgraduateLoan: StudentLoanPlanConfig;
+}
+
+export type StudentLoanPlan = 'plan1' | 'plan2' | 'plan4' | 'plan5';
+
+export interface StudentLoanPlanConfig {
+  label: string;
+  threshold: number; // repay `rate` of income above this
+  rate: number;
 }
 
 export const config2026: TaxConfig = {
@@ -66,6 +78,14 @@ export const config2026: TaxConfig = {
   childcareCliffThreshold: 100_000,
   taxFreeChildcareMaxPerChild: 2_000,
   fundedHoursDefaultAnnualPerChild: 4_000, // rough term-time estimate; user can edit
+
+  studentLoanPlans: {
+    plan1: { label: 'Plan 1', threshold: 26_065, rate: 0.09 }, // (2025/26)
+    plan2: { label: 'Plan 2', threshold: 28_470, rate: 0.09 }, // (2025/26)
+    plan4: { label: 'Plan 4 (Scotland)', threshold: 32_745, rate: 0.09 }, // (2025/26)
+    plan5: { label: 'Plan 5', threshold: 25_000, rate: 0.09 }, // repayments from Apr 2026
+  },
+  postgraduateLoan: { label: 'Postgraduate', threshold: 21_000, rate: 0.06 }, // (2025/26)
 };
 
 export function annualChildBenefit(children: number, cfg: TaxConfig): number {

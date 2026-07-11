@@ -11,17 +11,30 @@ export function Readout({ breakdown, marginalRate, effectiveRate }: ReadoutProps
   const b = breakdown;
   return (
     <div className="readout">
-      <div className="stat stat-primary">
-        <span className="stat-value">{formatPercent(marginalRate)}</span>
-        <span className="stat-label">Marginal rate on your next £1</span>
+      <div className="stat-top">
+        <div className="stat">
+          <span className="stat-value big neg">{formatPercent(marginalRate)}</span>
+          <span className="stat-label">Marginal rate on your next £1</span>
+        </div>
+        <div className="stat">
+          <span className="stat-value big neg">{formatPercent(effectiveRate, 1)}</span>
+          <span className="stat-label">Effective (average) rate</span>
+        </div>
       </div>
-      <div className="stat">
-        <span className="stat-value">{formatPercent(effectiveRate, 1)}</span>
-        <span className="stat-label">Effective (average) rate</span>
-      </div>
-      <div className="stat">
-        <span className="stat-value">{formatGBP(b.takeHome)}</span>
-        <span className="stat-label">Take-home (cash)</span>
+
+      <div className="stat-tiles">
+        <div className="stat">
+          <span className="stat-value pos">{formatGBP(b.takeHome)}</span>
+          <span className="stat-label">Take-home (cash)</span>
+        </div>
+        <div className="stat">
+          <span className="stat-value pos">{formatGBP(b.pensionContribution)}</span>
+          <span className="stat-label">Pension contribution</span>
+        </div>
+        <div className="stat">
+          <span className="stat-value neg">{formatGBP(b.totalDeductions)}</span>
+          <span className="stat-label">Tax, NI, loan, etc.</span>
+        </div>
       </div>
 
       <table className="breakdown">
@@ -44,12 +57,6 @@ export function Readout({ breakdown, marginalRate, effectiveRate }: ReadoutProps
             <tr>
               <td>Student loan</td>
               <td>{formatGBP(b.studentLoan)}</td>
-            </tr>
-          )}
-          {b.pensionContribution > 0 && (
-            <tr className="muted">
-              <td>Pension (saved, not taxed as income)</td>
-              <td>{formatGBP(b.pensionContribution)}</td>
             </tr>
           )}
           <tr className="total">

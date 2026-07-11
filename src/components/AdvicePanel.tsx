@@ -1,6 +1,10 @@
 import { useRef, type Dispatch, type SetStateAction } from 'react';
 import type { TaxInputs } from '../tax/types';
-import { cycleToWorkSaving, salarySacrificeSwitchSaving } from '../tax/curve';
+import {
+  cycleToWorkSaving,
+  reliefAtSourceHigherRateClaimable,
+  salarySacrificeSwitchSaving,
+} from '../tax/curve';
 import { formatGBP } from '../tax/format';
 import { PensionFields, pensionMethods } from './PensionFields';
 
@@ -17,6 +21,8 @@ export function AdvicePanel({ inputs, setInputs, onBack }: Props) {
   const currentMethodLabel = pensionMethods.find((m) => m.value === inputs.pension.method)?.label;
   const switchSaving = salarySacrificeSwitchSaving(inputs);
   const bikeSaving = cycleToWorkSaving(inputs);
+  // Higher/additional-rate relief to claim back on a relief-at-source pension.
+  const raSClaimable = reliefAtSourceHigherRateClaimable(inputs);
 
   // Once the salary-sacrifice section has appeared, keep it: switching pension method
   // in the section below shouldn't make it flicker in and out. It becomes a
@@ -37,6 +43,32 @@ export function AdvicePanel({ inputs, setInputs, onBack }: Props) {
           Each option below feeds straight back into the chart and the numbers above.
         </p>
       </div>
+
+      {raSClaimable > 0 && (
+        <section className="advice-item">
+          <span className="advice-num">{++n}</span>
+          <div className="advice-body">
+            <h3>Have you claimed your tax back?</h3>
+            <p>
+              Your relief-at-source pension is automatically topped up by 20% — for a basic-rate
+              taxpayer, that's all their tax back. But you pay tax above 20%, so the extra relief
+              isn't given automatically: you claim it through Self Assessment or HMRC's online
+              service, and the tax you overpaid is refunded to your bank account.
+            </p>
+            <div className="advice-saving">
+              <strong>{formatGBP(raSClaimable)}/yr</strong> of higher-rate relief to claim back
+            </div>
+            <a
+              className="advice-action"
+              href="https://www.gov.uk/guidance/claim-tax-relief-on-your-private-pension-payments"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Claim it at GOV.UK →
+            </a>
+          </div>
+        </section>
+      )}
 
       {showSacrificeSection.current && (
         <section className="advice-item">

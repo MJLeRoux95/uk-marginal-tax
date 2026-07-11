@@ -3,7 +3,13 @@
 // on the engine.
 
 import { config2026, type TaxConfig } from './config2026';
-import { bonusResult, computeBreakdown, marginalRate, type EngineInputs } from './engine';
+import {
+  bonusResult,
+  computeBreakdown,
+  marginalRate,
+  reliefAtSourceClaimable,
+  type EngineInputs,
+} from './engine';
 import { formatGBP } from './format';
 import {
   resolvePensionAmount,
@@ -30,20 +36,29 @@ export function toEngineInputs(inputs: TaxInputs): EngineInputs {
 }
 
 /**
- * Extra take-home per year from switching the current pension method to salary
- * sacrifice (which also avoids NI). Zero if already on salary sacrifice or if no
- * contribution is being made.
+ * Yearly gain from switching the current pension method to salary sacrifice. The
+ * income-tax relief is the same across methods (higher-rate relief on relief-at-source
+ * just has to be claimed), so the genuine, unavoidable difference is the employee
+ * National Insurance saved on the contribution. Zero if already on salary sacrifice.
  */
 export function salarySacrificeSwitchSaving(inputs: TaxInputs, cfg: TaxConfig = config2026): number {
   if (inputs.pension.method === 'salary_sacrifice') return 0;
   const current = toEngineInputs(inputs);
-  const now = computeBreakdown(inputs.grossSalary, current, cfg).takeHome;
-  const sacrificed = computeBreakdown(
+  const niNow = computeBreakdown(inputs.grossSalary, current, cfg).employeeNI;
+  const niSacrificed = computeBreakdown(
     inputs.grossSalary,
     { ...current, pensionMethod: 'salary_sacrifice' },
     cfg,
-  ).takeHome;
-  return Math.max(0, sacrificed - now);
+  ).employeeNI;
+  return Math.max(0, niNow - niSacrificed);
+}
+
+/** Higher/additional-rate relief still to be claimed on a relief-at-source pension. */
+export function reliefAtSourceHigherRateClaimable(
+  inputs: TaxInputs,
+  cfg: TaxConfig = config2026,
+): number {
+  return reliefAtSourceClaimable(inputs.grossSalary, toEngineInputs(inputs), cfg);
 }
 
 /** Income Tax + NI saved by sacrificing the Cycle to Work amount from gross pay. */

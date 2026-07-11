@@ -167,6 +167,30 @@ export function marginalRate(
   return (hi - lo) / dGross;
 }
 
+/**
+ * Higher/additional-rate relief on a relief-at-source pension that HMRC does not give
+ * automatically — the 20% added at source is only basic-rate relief, so a 40%/45%
+ * taxpayer must claim the rest (via Self Assessment or HMRC's online service). Returns
+ * the extra relief owed for the year; zero for basic-rate taxpayers or other methods.
+ */
+export function reliefAtSourceClaimable(
+  grossSalary: number,
+  inputs: EngineInputs,
+  cfg: TaxConfig = config2026,
+): number {
+  if (inputs.pensionMethod !== 'relief_at_source') return 0;
+  const pension = Math.max(0, Math.min(inputs.pensionAmount, grossSalary));
+  if (pension <= 0) return 0;
+  const cycleToWork = Math.max(0, inputs.cycleToWork ?? 0);
+  const taxable = grossSalary - cycleToWork + inputs.otherIncome;
+  const ani = Math.max(0, grossSalary + inputs.otherIncome - pension - cycleToWork);
+  const pa = taperedPersonalAllowance(ani, cfg);
+  // Difference between tax with only basic-rate relief and tax with the band extended.
+  const basicRateOnly = incomeTaxOnTaxable(taxable, pa, cfg, 0);
+  const withHigherRelief = incomeTaxOnTaxable(taxable, pa, cfg, pension);
+  return Math.max(0, basicRateOnly - withHigherRelief);
+}
+
 /** Effective (average) tax rate: total deductions as a share of total gross. */
 export function effectiveRate(breakdown: DeductionBreakdown): number {
   const totalGross = breakdown.grossSalary + breakdown.otherIncome;

@@ -3,6 +3,7 @@ import {
   buildBonus,
   buildCliffAnnotation,
   cycleToWorkSaving,
+  reliefAtSourceHigherRateClaimable,
   salarySacrificeSwitchSaving,
   toEngineInputs,
 } from './curve';
@@ -107,9 +108,35 @@ describe('tax-reduction savings', () => {
     expect(salarySacrificeSwitchSaving(ss)).toBe(0);
   });
 
+  it('switching relief-at-source to salary sacrifice saves only the NI (relief is equal)', () => {
+    const ras = clean({
+      grossSalary: 65_000,
+      pension: { method: 'relief_at_source', inputType: 'amount', value: 3_250 },
+    });
+    // £3,250 above the UEL → 2% NI = £65 (the income-tax relief is identical once claimed).
+    expect(Math.abs(salarySacrificeSwitchSaving(ras) - 65)).toBeLessThan(0.5);
+  });
+
   it('cycle to work saves marginal tax + NI on the bike cost', () => {
     const bike = clean({ cycleToWork: 1_000 });
     // £60k is higher-rate: 40% tax + 2% NI on the £1,000 sacrificed = £420.
     expect(Math.abs(cycleToWorkSaving(bike) - 420)).toBeLessThan(0.5);
+  });
+
+  it('relief-at-source higher-rate claimable = extra 20% on the contribution', () => {
+    const ras = clean({
+      grossSalary: 65_000,
+      pension: { method: 'relief_at_source', inputType: 'amount', value: 3_250 },
+    });
+    // £65k higher-rate: £3,250 band extension shifts income from 40% to 20% → £650.
+    expect(Math.abs(reliefAtSourceHigherRateClaimable(ras) - 650)).toBeLessThan(0.5);
+  });
+
+  it('nothing to claim for a basic-rate relief-at-source payer', () => {
+    const ras = clean({
+      grossSalary: 30_000,
+      pension: { method: 'relief_at_source', inputType: 'amount', value: 2_000 },
+    });
+    expect(reliefAtSourceHigherRateClaimable(ras)).toBe(0);
   });
 });

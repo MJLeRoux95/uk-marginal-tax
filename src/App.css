@@ -524,12 +524,14 @@ body {
 }
 .advice-action {
   align-self: flex-start;
+  display: inline-block;
   border: none;
   background: var(--accent);
   color: #fff;
   font-family: var(--sans);
   font-size: 0.85rem;
   font-weight: 600;
+  text-decoration: none;
   padding: 9px 14px;
   border-radius: var(--radius);
   cursor: pointer;

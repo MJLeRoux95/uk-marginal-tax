@@ -4,6 +4,7 @@
 
 import { config2026, type TaxConfig } from './config2026';
 import { computeBreakdown, marginalRate, type EngineInputs } from './engine';
+import { formatGBP } from './format';
 import { resolvePensionAmount, type Annotation, type CurvePoint, type TaxInputs } from './types';
 
 export const SWEEP_MIN = 0;
@@ -66,23 +67,59 @@ export function buildCliffAnnotation(
   const cliffGross = cfg.childcareCliffThreshold - inputs.otherIncome + pension;
   if (cliffGross < SWEEP_MIN || cliffGross > SWEEP_MAX) return null;
 
-  // Just above the cliff you keep (1 − marginal) of each extra £1. To out-earn the
-  // lost benefit you need a raise of valueLost / that retention rate.
+  // The "dead zone": just past the cliff you've lost `valueLost` of childcare, and
+  // extra pay only trickles back (you keep well under half of it in the 60% band).
+  // The zone ends where take-home has risen by the full `valueLost` — i.e. where a
+  // pound of your total finances (take-home + childcare) finally exceeds where you
+  // stood at the cliff edge. Solved exactly against the take-home curve.
   const engineInputs = toEngineInputs(inputs);
-  const retention = 1 - marginalRate(cliffGross + 100, engineInputs, cfg);
-  const payRiseToRecover = retention > 0 ? valueLost / retention : Infinity;
+  const recovery = grossToRecover(cliffGross, valueLost, engineInputs, cfg);
+  const payRiseToRecover = recovery.gross - cliffGross;
+
+  const detail = recovery.recovered
+    ? `Cross this point and you lose ~${formatGBP(valueLost)} of childcare support in one go. ` +
+      `Everything from ${formatGBP(cliffGross)} up to ${formatGBP(recovery.gross)} gross (the shaded ` +
+      `zone) leaves you financially no better off than at ${formatGBP(cliffGross)} — you only truly ` +
+      `get ahead once you earn about ${formatGBP(recovery.gross)} (${formatGBP(payRiseToRecover)} more).`
+    : `Cross this point and you lose ~${formatGBP(valueLost)} of childcare support in one go. ` +
+      `You wouldn't earn that back even by ${formatGBP(SWEEP_MAX)} gross — the shaded zone runs off the chart.`;
 
   return {
     kind: 'cliff',
     label: 'Childcare cliff (£100k)',
     at: cliffGross,
+    from: cliffGross,
+    to: recovery.gross,
     valueLost,
     payRiseToRecover,
-    detail:
-      `Above £100k adjusted net income you lose ~£${Math.round(valueLost).toLocaleString()} of ` +
-      `childcare support at once. You'd need roughly £${Math.round(payRiseToRecover).toLocaleString()} ` +
-      `more gross to be back where you were.`,
+    detail,
   };
+}
+
+/**
+ * The gross income at which take-home has risen by `valueLost` above its level at
+ * `cliffGross` — i.e. where you've fully out-earned the lost childcare benefit.
+ * Take-home is monotonic in gross, so we binary-search it. Returns `recovered:false`
+ * (clamped to SWEEP_MAX) when recovery lies beyond the charted range.
+ */
+function grossToRecover(
+  cliffGross: number,
+  valueLost: number,
+  engineInputs: EngineInputs,
+  cfg: TaxConfig,
+): { gross: number; recovered: boolean } {
+  const target = computeBreakdown(cliffGross, engineInputs, cfg).takeHome + valueLost;
+  if (computeBreakdown(SWEEP_MAX, engineInputs, cfg).takeHome < target) {
+    return { gross: SWEEP_MAX, recovered: false };
+  }
+  let lo = cliffGross;
+  let hi = SWEEP_MAX;
+  for (let i = 0; i < 44; i++) {
+    const mid = (lo + hi) / 2;
+    if (computeBreakdown(mid, engineInputs, cfg).takeHome < target) lo = mid;
+    else hi = mid;
+  }
+  return { gross: hi, recovered: true };
 }
 
 /** The user's current position marker. */

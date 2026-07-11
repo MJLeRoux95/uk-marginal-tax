@@ -127,9 +127,29 @@ export function Chart({ curve, cliff, positionGross, bonus }: ChartProps) {
         />
       )}
 
-      {/* £100k childcare cliff */}
+      {/* £100k childcare cliff: dead-zone band from the cliff to full recovery */}
       {cliff?.at != null && (
         <g>
+          {cliff.from != null && cliff.to != null && cliff.to > cliff.from && (
+            <rect
+              x={x(cliff.from)}
+              y={M.top}
+              width={x(cliff.to) - x(cliff.from)}
+              height={VB_H - M.bottom - M.top}
+              className="cliff-zone"
+            />
+          )}
+          {/* recovery edge */}
+          {cliff.to != null && cliff.to > (cliff.from ?? cliff.at) && (
+            <line
+              x1={x(cliff.to)}
+              x2={x(cliff.to)}
+              y1={M.top}
+              y2={VB_H - M.bottom}
+              className="cliff-recover-line"
+            />
+          )}
+          {/* cliff edge */}
           <line
             x1={x(cliff.at)}
             x2={x(cliff.at)}

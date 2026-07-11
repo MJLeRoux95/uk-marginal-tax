@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { buildBonus, buildCliffAnnotation, toEngineInputs } from './curve';
+import {
+  buildBonus,
+  buildCliffAnnotation,
+  cycleToWorkSaving,
+  salarySacrificeSwitchSaving,
+  toEngineInputs,
+} from './curve';
 import { computeBreakdown } from './engine';
 import type { TaxInputs } from './types';
 
@@ -16,7 +22,25 @@ const inputs: TaxInputs = {
   },
   studentLoan: { plan: 'none', postgraduate: false },
   bonus: 0,
+  cycleToWork: 0,
 };
+
+const clean = (over: Partial<TaxInputs>): TaxInputs => ({
+  grossSalary: 60_000,
+  otherIncome: 0,
+  pension: { method: 'salary_sacrifice', inputType: 'amount', value: 0 },
+  children: 0,
+  childcare: {
+    usesTaxFreeChildcare: false,
+    usesFundedHours: false,
+    taxFreeChildcarePerChild: 2_000,
+    fundedHoursPerChild: 4_000,
+  },
+  studentLoan: { plan: 'none', postgraduate: false },
+  bonus: 0,
+  cycleToWork: 0,
+  ...over,
+});
 
 describe('childcare cliff zone', () => {
   it('spans from the £100k cliff to the true recovery income', () => {
@@ -68,5 +92,24 @@ describe('bonus vs the childcare cliff', () => {
     const b = buildBonus({ ...inputs, grossSalary: 110_000, bonus: 5_000 });
     expect(b.crossesCliff).toBe(false); // childcare already gone before the bonus
     expect(b.childcareLost).toBe(0);
+  });
+});
+
+describe('tax-reduction savings', () => {
+  it('switching net pay to salary sacrifice saves the employee NI on the contribution', () => {
+    const netPay = clean({ pension: { method: 'net_pay', inputType: 'amount', value: 10_000 } });
+    // £60k: the £50k–£60k band is 8% then 2% NI → £216.20 saved on a £10k sacrifice.
+    expect(Math.abs(salarySacrificeSwitchSaving(netPay) - 216.2)).toBeLessThan(0.5);
+  });
+
+  it('no switch saving when already on salary sacrifice', () => {
+    const ss = clean({ pension: { method: 'salary_sacrifice', inputType: 'amount', value: 10_000 } });
+    expect(salarySacrificeSwitchSaving(ss)).toBe(0);
+  });
+
+  it('cycle to work saves marginal tax + NI on the bike cost', () => {
+    const bike = clean({ cycleToWork: 1_000 });
+    // £60k is higher-rate: 40% tax + 2% NI on the £1,000 sacrificed = £420.
+    expect(Math.abs(cycleToWorkSaving(bike) - 420)).toBeLessThan(0.5);
   });
 });

@@ -3,6 +3,7 @@ import { Chart } from './components/Chart';
 import { Controls } from './components/Controls';
 import { Readout } from './components/Readout';
 import { BonusCard } from './components/BonusCard';
+import { AdvicePanel } from './components/AdvicePanel';
 import {
   buildBonus,
   buildCliffAnnotation,
@@ -18,6 +19,7 @@ import './App.css';
 
 export default function App() {
   const [inputs, setInputs] = useState<TaxInputs>(defaultInputs);
+  const [showAdvice, setShowAdvice] = useState(false);
 
   // Everything derived recomputes on every input change — no "Calculate" button.
   const { curve, cliff, hicbc, breakdown, marginal, effective, bonus } = useMemo(() => {
@@ -62,8 +64,27 @@ export default function App() {
 
         <aside className="side-panel">
           <Readout breakdown={breakdown} marginalRate={marginal} effectiveRate={effective} />
-          <Controls inputs={inputs} setInputs={setInputs} />
-          {inputs.bonus > 0 && <BonusCard result={bonus} />}
+
+          {showAdvice ? (
+            <AdvicePanel
+              inputs={inputs}
+              setInputs={setInputs}
+              onBack={() => setShowAdvice(false)}
+            />
+          ) : (
+            <>
+              <button
+                type="button"
+                className="advice-cta"
+                onClick={() => setShowAdvice(true)}
+              >
+                <span>So what can I do about it?</span>
+                <span aria-hidden="true">→</span>
+              </button>
+              <Controls inputs={inputs} setInputs={setInputs} />
+              {inputs.bonus > 0 && <BonusCard result={bonus} />}
+            </>
+          )}
         </aside>
       </main>
 

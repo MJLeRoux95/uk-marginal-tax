@@ -41,6 +41,8 @@ export interface TaxInputs {
   studentLoan: StudentLoanInput;
   /** One-off bonus, analysed as income stacked on top of base salary. */
   bonus: number;
+  /** Annual cost sacrificed via a Cycle to Work scheme (a salary sacrifice). */
+  cycleToWork: number;
 }
 
 /** Pension resolved to a fixed £/year amount for a given salary. */

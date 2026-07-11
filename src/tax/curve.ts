@@ -25,7 +25,37 @@ export function toEngineInputs(inputs: TaxInputs): EngineInputs {
     pensionMethod: inputs.pension.method,
     children: inputs.children,
     studentLoan: inputs.studentLoan,
+    cycleToWork: inputs.cycleToWork,
   };
+}
+
+/**
+ * Extra take-home per year from switching the current pension method to salary
+ * sacrifice (which also avoids NI). Zero if already on salary sacrifice or if no
+ * contribution is being made.
+ */
+export function salarySacrificeSwitchSaving(inputs: TaxInputs, cfg: TaxConfig = config2026): number {
+  if (inputs.pension.method === 'salary_sacrifice') return 0;
+  const current = toEngineInputs(inputs);
+  const now = computeBreakdown(inputs.grossSalary, current, cfg).takeHome;
+  const sacrificed = computeBreakdown(
+    inputs.grossSalary,
+    { ...current, pensionMethod: 'salary_sacrifice' },
+    cfg,
+  ).takeHome;
+  return Math.max(0, sacrificed - now);
+}
+
+/** Income Tax + NI saved by sacrificing the Cycle to Work amount from gross pay. */
+export function cycleToWorkSaving(inputs: TaxInputs, cfg: TaxConfig = config2026): number {
+  const withBike = toEngineInputs(inputs);
+  const taxed = computeBreakdown(inputs.grossSalary, withBike, cfg).totalDeductions;
+  const untaxed = computeBreakdown(
+    inputs.grossSalary,
+    { ...withBike, cycleToWork: 0 },
+    cfg,
+  ).totalDeductions;
+  return Math.max(0, untaxed - taxed);
 }
 
 /** Sweep gross salary and return marginal-rate points for the chart line. */

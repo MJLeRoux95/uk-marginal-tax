@@ -1,7 +1,8 @@
 import type { Dispatch, SetStateAction } from 'react';
 import { config2026, type StudentLoanPlan } from '../tax/config2026';
-import type { PensionMethod, TaxInputs } from '../tax/types';
+import type { TaxInputs } from '../tax/types';
 import { formatGBP } from '../tax/format';
+import { PensionFields } from './PensionFields';
 
 const studentLoanPlans = Object.entries(config2026.studentLoanPlans) as [
   StudentLoanPlan,
@@ -13,16 +14,8 @@ interface ControlsProps {
   setInputs: Dispatch<SetStateAction<TaxInputs>>;
 }
 
-const pensionMethods: { value: PensionMethod; label: string; hint: string }[] = [
-  { value: 'salary_sacrifice', label: 'Salary sacrifice', hint: 'Cuts Income Tax and NI' },
-  { value: 'relief_at_source', label: 'Relief at source', hint: 'Tax relief only, no NI saving' },
-  { value: 'net_pay', label: 'Net pay', hint: 'Cuts tax before NI, no NI saving' },
-];
-
 export function Controls({ inputs, setInputs }: ControlsProps) {
   const patch = (p: Partial<TaxInputs>) => setInputs((s) => ({ ...s, ...p }));
-  const patchPension = (p: Partial<TaxInputs['pension']>) =>
-    setInputs((s) => ({ ...s, pension: { ...s.pension, ...p } }));
   const patchChildcare = (p: Partial<TaxInputs['childcare']>) =>
     setInputs((s) => ({ ...s, childcare: { ...s.childcare, ...p } }));
   const patchStudentLoan = (p: Partial<TaxInputs['studentLoan']>) =>
@@ -68,55 +61,7 @@ export function Controls({ inputs, setInputs }: ControlsProps) {
 
       <section className="control-group">
         <h3>Pension</h3>
-        <div className="segmented">
-          {pensionMethods.map((m) => (
-            <button
-              key={m.value}
-              type="button"
-              className={inputs.pension.method === m.value ? 'seg active' : 'seg'}
-              onClick={() => patchPension({ method: m.value })}
-              title={m.hint}
-            >
-              {m.label}
-            </button>
-          ))}
-        </div>
-        <p className="hint">{pensionMethods.find((m) => m.value === inputs.pension.method)?.hint}</p>
-
-        <div className="field-row">
-          <label className="field grow">
-            <span className="field-label">
-              Contribution{' '}
-              {inputs.pension.inputType === 'percent'
-                ? `${inputs.pension.value}%`
-                : formatGBP(inputs.pension.value)}
-            </span>
-            <input
-              type="range"
-              min={0}
-              max={inputs.pension.inputType === 'percent' ? 60 : 60_000}
-              step={inputs.pension.inputType === 'percent' ? 1 : 500}
-              value={inputs.pension.value}
-              onChange={(e) => patchPension({ value: Number(e.target.value) })}
-            />
-          </label>
-          <div className="segmented small">
-            <button
-              type="button"
-              className={inputs.pension.inputType === 'percent' ? 'seg active' : 'seg'}
-              onClick={() => patchPension({ inputType: 'percent', value: 5 })}
-            >
-              %
-            </button>
-            <button
-              type="button"
-              className={inputs.pension.inputType === 'amount' ? 'seg active' : 'seg'}
-              onClick={() => patchPension({ inputType: 'amount', value: 5_000 })}
-            >
-              £
-            </button>
-          </div>
-        </div>
+        <PensionFields inputs={inputs} setInputs={setInputs} />
       </section>
 
       <section className="control-group">

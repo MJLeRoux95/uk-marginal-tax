@@ -96,6 +96,8 @@ export interface EngineInputs {
   pensionMethod: PensionMethod;
   children: number;
   studentLoan: StudentLoanInput;
+  /** Cycle to Work sacrifice — reduces taxable + NI-able pay and ANI, like sal-sac. */
+  cycleToWork?: number;
 }
 
 /** Compute the full deduction breakdown at a given gross salary. */
@@ -106,19 +108,22 @@ export function computeBreakdown(
 ): DeductionBreakdown {
   const pension = Math.max(0, Math.min(inputs.pensionAmount, grossSalary));
   const { pensionMethod, otherIncome, children } = inputs;
+  // Cycle to Work is always a salary sacrifice: it reduces taxable pay, NI-able pay
+  // and adjusted net income, regardless of the chosen pension method.
+  const cycleToWork = Math.max(0, inputs.cycleToWork ?? 0);
 
   // How the pension method changes taxable pay, NIable pay, and RAS band extension.
   const salaryAfterSacrifice =
-    pensionMethod === 'salary_sacrifice' ? grossSalary - pension : grossSalary;
+    (pensionMethod === 'salary_sacrifice' ? grossSalary - pension : grossSalary) - cycleToWork;
 
   const taxableEmployment =
-    pensionMethod === 'relief_at_source' ? grossSalary : grossSalary - pension;
+    (pensionMethod === 'relief_at_source' ? grossSalary : grossSalary - pension) - cycleToWork;
   const niableEmployment = salaryAfterSacrifice; // net_pay & RAS give NO NI relief
   const rasExtension = pensionMethod === 'relief_at_source' ? pension : 0;
 
-  // Adjusted net income drives PA taper, HICBC and the £100k cliff. A gross pension
-  // contribution reduces ANI under all three methods.
-  const adjustedNetIncome = Math.max(0, grossSalary + otherIncome - pension);
+  // Adjusted net income drives PA taper, HICBC and the £100k cliff. Gross pension
+  // contributions and Cycle to Work sacrifice both reduce ANI.
+  const adjustedNetIncome = Math.max(0, grossSalary + otherIncome - pension - cycleToWork);
 
   const personalAllowance = taperedPersonalAllowance(adjustedNetIncome, cfg);
   const taxableIncome = taxableEmployment + otherIncome;
@@ -129,7 +134,7 @@ export function computeBreakdown(
   const studentLoan = studentLoanRepayment(niableEmployment + otherIncome, inputs.studentLoan, cfg);
 
   const totalDeductions = incomeTax + ni + charge + studentLoan;
-  const takeHome = grossSalary + otherIncome - pension - totalDeductions;
+  const takeHome = grossSalary + otherIncome - pension - cycleToWork - totalDeductions;
 
   return {
     grossSalary,

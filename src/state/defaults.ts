@@ -22,4 +22,5 @@ export const defaultInputs: TaxInputs = {
     postgraduate: false,
   },
   bonus: 0,
+  cycleToWork: 0,
 };

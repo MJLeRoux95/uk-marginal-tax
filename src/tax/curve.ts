@@ -129,6 +129,32 @@ function grossToRecover(
 }
 
 /**
+ * The band over which the High Income Child Benefit Charge withdraws Child Benefit
+ * (£60k–£80k adjusted net income), expressed on the gross-income x-axis. Only present
+ * when there are children. The chart labels this as the raised "jump" in the curve.
+ */
+export function buildHicbcAnnotation(
+  inputs: TaxInputs,
+  cfg: TaxConfig = config2026,
+): Annotation | null {
+  if (inputs.children <= 0) return null;
+
+  const pension = resolvePensionAmount(inputs.pension, inputs.grossSalary);
+  const from = cfg.hicbcLowerThreshold - inputs.otherIncome + pension;
+  const to = cfg.hicbcUpperThreshold - inputs.otherIncome + pension;
+  if (to < SWEEP_MIN || from > SWEEP_MAX) return null;
+
+  return {
+    kind: 'band',
+    label: 'Child Benefit charge',
+    from,
+    to,
+    detail: `Between ${formatGBP(from)} and ${formatGBP(to)} gross, Child Benefit is clawed back, ` +
+      `adding to your marginal rate.`,
+  };
+}
+
+/**
  * How much of a one-off bonus you truly keep, including the £100k childcare cliff.
  * If the bonus is what tips adjusted net income over £100k, the whole childcare
  * benefit is forfeited — which can make the bonus worth less than nothing.

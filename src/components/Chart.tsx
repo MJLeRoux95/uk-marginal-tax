@@ -14,6 +14,7 @@ const Y_MAX = 0.72;
 interface ChartProps {
   curve: CurvePoint[];
   cliff: Annotation | null;
+  hicbc: Annotation | null;
   positionGross: number;
   bonus: number;
 }
@@ -26,7 +27,7 @@ function rateAt(curve: CurvePoint[], gross: number): number {
   return curve[i].marginalRate;
 }
 
-export function Chart({ curve, cliff, positionGross, bonus }: ChartProps) {
+export function Chart({ curve, cliff, hicbc, positionGross, bonus }: ChartProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const [hoverGross, setHoverGross] = useState<number | null>(null);
 
@@ -126,6 +127,25 @@ export function Chart({ curve, cliff, positionGross, bonus }: ChartProps) {
           className="bonus-span"
         />
       )}
+
+      {/* Child Benefit charge band (£60k–£80k): labels the raised step in the curve */}
+      {hicbc?.from != null &&
+        hicbc?.to != null &&
+        (() => {
+          const x0 = x(Math.max(0, hicbc.from));
+          const x1 = x(Math.min(X_MAX, hicbc.to));
+          const yb = M.top + 18;
+          return (
+            <g>
+              <line x1={x0} x2={x1} y1={yb} y2={yb} className="hicbc-bracket" />
+              <line x1={x0} x2={x0} y1={yb} y2={yb + 6} className="hicbc-bracket" />
+              <line x1={x1} x2={x1} y1={yb} y2={yb + 6} className="hicbc-bracket" />
+              <text x={(x0 + x1) / 2} y={yb - 5} className="hicbc-label" textAnchor="middle">
+                Child Benefit charge
+              </text>
+            </g>
+          );
+        })()}
 
       {/* £100k childcare cliff: dead-zone band from the cliff to full recovery */}
       {cliff?.at != null && (

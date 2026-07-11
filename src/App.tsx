@@ -3,7 +3,13 @@ import { Chart } from './components/Chart';
 import { Controls } from './components/Controls';
 import { Readout } from './components/Readout';
 import { BonusCard } from './components/BonusCard';
-import { buildBonus, buildCliffAnnotation, buildCurve, toEngineInputs } from './tax/curve';
+import {
+  buildBonus,
+  buildCliffAnnotation,
+  buildCurve,
+  buildHicbcAnnotation,
+  toEngineInputs,
+} from './tax/curve';
 import { computeBreakdown, effectiveRate, marginalRate } from './tax/engine';
 import { formatGBP } from './tax/format';
 import { defaultInputs } from './state/defaults';
@@ -14,12 +20,13 @@ export default function App() {
   const [inputs, setInputs] = useState<TaxInputs>(defaultInputs);
 
   // Everything derived recomputes on every input change — no "Calculate" button.
-  const { curve, cliff, breakdown, marginal, effective, bonus } = useMemo(() => {
+  const { curve, cliff, hicbc, breakdown, marginal, effective, bonus } = useMemo(() => {
     const engineInputs = toEngineInputs(inputs);
     const b = computeBreakdown(inputs.grossSalary, engineInputs);
     return {
       curve: buildCurve(inputs),
       cliff: buildCliffAnnotation(inputs),
+      hicbc: buildHicbcAnnotation(inputs),
       breakdown: b,
       marginal: marginalRate(inputs.grossSalary, engineInputs),
       effective: effectiveRate(b),
@@ -42,6 +49,7 @@ export default function App() {
           <Chart
             curve={curve}
             cliff={cliff}
+            hicbc={hicbc}
             positionGross={inputs.grossSalary}
             bonus={inputs.bonus}
           />

@@ -8,6 +8,7 @@
   --accent: #2f6fed;
   --accent-soft: rgba(47, 111, 237, 0.14);
   --cliff: #e0483d;
+  --hicbc: #b8791f;
   --bonus: #1f9d6b;
   --bonus-lost: #d38b2f;
   --shadow: 0 1px 3px rgba(20, 30, 50, 0.08), 0 6px 20px rgba(20, 30, 50, 0.06);
@@ -25,6 +26,7 @@
     --accent: #5b8dff;
     --accent-soft: rgba(91, 141, 255, 0.16);
     --cliff: #ff6f63;
+    --hicbc: #e0a94b;
     --bonus: #2fd08f;
     --bonus-lost: #e6a94b;
     --shadow: 0 1px 3px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.3);
@@ -185,6 +187,15 @@ body {
 .bonus-span {
   fill: var(--bonus);
   opacity: 0.16;
+}
+.hicbc-bracket {
+  stroke: var(--hicbc);
+  stroke-width: 1.5;
+}
+.hicbc-label {
+  fill: var(--hicbc);
+  font-size: 11px;
+  font-weight: 600;
 }
 .hover-line {
   stroke: var(--ink-soft);

@@ -54,8 +54,8 @@ export default function App() {
 
         <aside className="side-panel">
           <Readout breakdown={breakdown} marginalRate={marginal} effectiveRate={effective} />
-          {inputs.bonus > 0 && <BonusCard result={bonus} />}
           <Controls inputs={inputs} setInputs={setInputs} />
+          {inputs.bonus > 0 && <BonusCard result={bonus} />}
         </aside>
       </main>
 
